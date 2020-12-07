@@ -34,8 +34,10 @@ header ipv4_t {
     ip4Addr_t dstAddr;
 }
 
+
 struct metadata {
     /* empty */
+
 }
 
 struct headers {
@@ -65,6 +67,11 @@ parser MyParser(packet_in packet,
             default: accept;
         }
     }
+
+    state parse_ipv4 {
+        packet.extract(hdr.ipv4);
+        transition accept;
+    }
 }
 
 /*************************************************************************
@@ -91,14 +98,15 @@ control MyIngress(inout headers hdr,
     
     action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
         /* TODO */
-        meta.routing.nhop_ipv4 = dstAddr;
-        standard_metadata.egress_spec = port;
-        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+       standard_metadata.egress_spec = port;
+       hdr.ethernet.srcAddr=hdr.ethernet.dstAddr;
+       hdr.ethernet.dstAddr=dstAddr;
+       hdr.ipv4.ttl=hdr.ipv4.ttl-1;
     }
     
     table ipv4_lpm {
         /* TODO */
-        key = {
+       key = {
             hdr.ipv4.dstAddr: lpm;
         }
         actions = {
@@ -106,6 +114,7 @@ control MyIngress(inout headers hdr,
             drop;
             NoAction;
         }
+        size=1024;
         default_action = NoAction();
     }
     
