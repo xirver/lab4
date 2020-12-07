@@ -59,6 +59,11 @@ parser MyParser(packet_in packet,
 
     state parse_ethernet {
         /* TODO */
+        packet.extract(hdr.ethernet);
+        transition select(hdr.ethernet.etherType) {
+            TYPE_IPV4: parse_ipv4;
+            default: accept;
+        }
     }
 }
 
@@ -86,10 +91,22 @@ control MyIngress(inout headers hdr,
     
     action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
         /* TODO */
+        meta.routing.nhop_ipv4 = dstAddr;
+        standard_metadata.egress_spec = port;
+        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
     
     table ipv4_lpm {
         /* TODO */
+        key = {
+            hdr.ipv4.dstAddr: lpm;
+        }
+        actions = {
+            ipv4_forward;
+            drop;
+            NoAction;
+        }
+        default_action = NoAction();
     }
     
     apply {
