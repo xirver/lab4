@@ -40,7 +40,7 @@ class P4InfoHelper(object):
             else:
                 if pre.id == id:
                     return o
-
+        
         if name:
             raise AttributeError("Could not find %r of type %s" % (name, entity_type))
         else:
