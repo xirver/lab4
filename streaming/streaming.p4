@@ -2,12 +2,69 @@
 #include <core.p4>
 #include <v1model.p4>
 
+const bit<16> TYPE_IPV4 = 0x800;
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
 /* define packet headers for Ethernet, IPv4, UDP, and RTP */
+typedef bit<9>  egressSpec_t;
+typedef bit<48> macAddr_t;
+typedef bit<32> ip4Addr_t;
+
+header ethernet_t {
+    macAddr_t dstAddr;
+    macAddr_t srcAddr;
+    bit<16>   etherType;
+}
+
+header ipv4_t {
+    /* TODO */
+    bit<4>    version;
+    bit<4>    ihl;
+    bit<8>    diffserv;
+    bit<16>   totalLen;
+    bit<16>   identification;
+    bit<3>    flags;
+    bit<13>   fragOffset;
+    bit<8>    ttl;
+    bit<8>    protocol;
+    bit<16>   hdrChecksum;
+    ip4Addr_t srcAddr;
+    ip4Addr_t dstAddr;
+}
+
+header udp_t {
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<16> length_;
+    bit<16> checksum;
+}
+
+header rtp_t {
+    bit<2> version;
+    bit<1> padding;
+    bit<1> extension;
+    bit<4> CSRC_count;
+    bit<1> marker;
+    bit<7> payload_type;
+    bit<16> sequence_number;
+    bit<32> timestamp;
+    bit<32> SSRC;
+}
+
+struct metadata {
+    /* empty */
+
+}
+
+struct headers {
+    ethernet_t  ethernet;
+    ipv4_t      ipv4;
+    udp_t       udp;
+    rtp_t       rtp;         
+}
 
 /*************************************************************************
 *********************** P A R S E R  ***********************************
@@ -20,7 +77,36 @@ parser MyParser(packet_in packet,
 
     state start {
         /* parse packet headers up to RTP if possible */
+        transition parse_ethernet;
     }
+    
+    state parse_ethernet {
+        /* TODO */
+        packet.extract(hdr.ethernet);
+        transition select(hdr.ethernet.etherType) {
+            TYPE_IPV4: parse_ipv4;
+            default: accept;
+        }
+    }
+
+    state parse_ipv4 {
+        packet.extract(hdr.ipv4);
+        transition select(hdr.ipv4.protocol) {
+            8w0x11: parse_udp;
+            default: accept;
+        }
+    }
+
+    state parse_udp {
+        packet.extract(hdr.udp);
+        transition parse_rtp;
+    }
+
+    state parse_rtp {            
+        packet.extract(hdr.rtp);
+        transition accept;
+    }
+
 }
 
 /*************************************************************************
@@ -41,6 +127,38 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
+     action drop(){
+        mark_to_drop(standard_metadata);
+    }
+
+    action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
+        /* TODO */
+       standard_metadata.egress_spec = port;
+       hdr.ethernet.srcAddr=hdr.ethernet.dstAddr;
+       hdr.ethernet.dstAddr=dstAddr;
+       hdr.ipv4.ttl=hdr.ipv4.ttl-1;
+    }
+
+    table ipv4_lpm {
+        /* TODO */
+       key = {
+            hdr.ipv4.dstAddr: lpm;
+        }
+        actions = {
+            ipv4_forward;
+            drop;
+            NoAction;
+        }
+        size = 16384;
+        default_action = NoAction();
+
+    }
+
+    apply {
+        if (hdr.ipv4.isValid()) {
+            ipv4_lpm.apply();
+        }
+    }
 }
 
 /*************************************************************************
@@ -50,6 +168,9 @@ control MyIngress(inout headers hdr,
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
+    apply {
+
+    }
 }
 
 /*************************************************************************
@@ -57,8 +178,7 @@ control MyEgress(inout headers hdr,
 *************************************************************************/
 
 control MyComputeChecksum(inout headers hdr, inout metadata meta) {
-     apply {
-    }
+    apply{}
 }
 
 /*************************************************************************
@@ -67,6 +187,11 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
 
 control MyDeparser(packet_out packet, in headers hdr) {
     apply {
+        
+        packet.emit(hdr.ethernet);
+        packet.emit(hdr.ipv4);
+        packet.emit(hdr.udp);
+        packet.emit(hdr.rtp);
     }
 }
 
