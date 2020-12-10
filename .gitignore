@@ -1,0 +1,7 @@
+*.log
+utils/*
+Makefile
+pcaps/*
+logs/*
+build/*
+routing/*

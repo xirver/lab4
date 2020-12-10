@@ -23,6 +23,9 @@ tables {
     id: 19198950
   }
   action_refs {
+    id: 27693059
+  }
+  action_refs {
     id: 21257015
   }
   size: 1024
@@ -70,6 +73,23 @@ actions {
     id: 19198950
     name: "MyIngress.multicast"
     alias: "multicast"
+  }
+}
+actions {
+  preamble {
+    id: 27693059
+    name: "MyIngress.multicast_mod"
+    alias: "multicast_mod"
+  }
+  params {
+    id: 1
+    name: "dstAddr"
+    bitwidth: 48
+  }
+  params {
+    id: 2
+    name: "dst_ip"
+    bitwidth: 32
   }
 }
 actions {

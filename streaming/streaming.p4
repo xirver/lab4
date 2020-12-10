@@ -135,6 +135,17 @@ control MyIngress(inout headers hdr,
     
     action multicast() {
         standard_metadata.mcast_grp = 1;
+/*         hdr.ethernet.srcAddr=hdr.ethernet.dstAddr;
+        hdr.ethernet.dstAddr=dstAddr;
+        hdr.ipv4.ttl=hdr.ipv4.ttl-1; */
+    }
+
+    action multicast_mod(macAddr_t dstAddr, ip4Addr_t dst_ip){
+        standard_metadata.mcast_grp = 1;
+        hdr.ethernet.srcAddr=hdr.ethernet.dstAddr;
+        hdr.ethernet.dstAddr=dstAddr;
+        hdr.ipv4.dstAddr=dst_ip;
+        hdr.ipv4.ttl=hdr.ipv4.ttl-1;
     }
 
     action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
@@ -153,6 +164,7 @@ control MyIngress(inout headers hdr,
         }
         actions={
             multicast;
+            multicast_mod;
             NoAction;
         }
         size=1024;
