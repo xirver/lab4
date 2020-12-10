@@ -91,13 +91,14 @@ parser MyParser(packet_in packet,
 
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
-        transition select(hdr.ipv4.protocol) {
+/*         transition select(hdr.ipv4.protocol) {
             8w0x11: parse_udp;
             default: accept;
-        }
+        } */
+        transition accept;
     }
 
-    state parse_udp {
+/*     state parse_udp {
         packet.extract(hdr.udp);
         transition parse_rtp;
     }
@@ -106,7 +107,7 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.rtp);
         transition accept;
     }
-
+ */
 }
 
 /*************************************************************************
@@ -130,13 +131,32 @@ control MyIngress(inout headers hdr,
      action drop(){
         mark_to_drop(standard_metadata);
     }
+    
+    
+    action multicast() {
+        standard_metadata.mcast_grp = 1;
+    }
 
     action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
         /* TODO */
-       standard_metadata.egress_spec = port;
-       hdr.ethernet.srcAddr=hdr.ethernet.dstAddr;
-       hdr.ethernet.dstAddr=dstAddr;
-       hdr.ipv4.ttl=hdr.ipv4.ttl-1;
+        standard_metadata.egress_spec = port;
+        hdr.ethernet.srcAddr=hdr.ethernet.dstAddr;
+        hdr.ethernet.dstAddr=dstAddr;
+        hdr.ipv4.ttl=hdr.ipv4.ttl-1;
+    }
+
+
+    table _multi{
+        key = {
+            hdr.ipv4.dstAddr: lpm;
+            hdr.ipv4.srcAddr: exact;
+        }
+        actions={
+            multicast;
+            NoAction;
+        }
+        size=1024;
+        default_action = NoAction();
     }
 
     table ipv4_lpm {
@@ -149,14 +169,14 @@ control MyIngress(inout headers hdr,
             drop;
             NoAction;
         }
-        size = 16384;
+        size=1024;
         default_action = NoAction();
-
     }
 
     apply {
         if (hdr.ipv4.isValid()) {
             ipv4_lpm.apply();
+            _multi.apply();
         }
     }
 }
@@ -168,8 +188,15 @@ control MyIngress(inout headers hdr,
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-    apply {
+    action drop() {
+            mark_to_drop(standard_metadata);
+        }
 
+    apply {
+        
+        // Prune multicast packet to ingress port to preventing loop
+        if (standard_metadata.egress_port == standard_metadata.ingress_port)
+            drop();
     }
 }
 

@@ -1,10 +1,10 @@
 
-[2020-12-09 16:23:40.571] /p4.v1.P4Runtime/SetForwardingPipelineConfig
+[2020-12-10 21:32:27.766] /p4.v1.P4Runtime/SetForwardingPipelineConfig
 ---
-Message too long (18418 bytes)! Skipping log...
+Message too long (22691 bytes)! Skipping log...
 ---
 
-[2020-12-09 16:23:40.587] /p4.v1.P4Runtime/Write
+[2020-12-10 21:32:27.786] /p4.v1.P4Runtime/Write
 ---
 device_id: 6
 election_id {
@@ -26,7 +26,7 @@ updates {
 }
 ---
 
-[2020-12-09 16:23:40.593] /p4.v1.P4Runtime/Write
+[2020-12-10 21:32:27.796] /p4.v1.P4Runtime/Write
 ---
 device_id: 6
 election_id {
@@ -62,7 +62,43 @@ updates {
 }
 ---
 
-[2020-12-09 16:23:40.600] /p4.v1.P4Runtime/Write
+[2020-12-10 21:32:27.802] /p4.v1.P4Runtime/Write
+---
+device_id: 6
+election_id {
+  low: 1
+}
+updates {
+  type: INSERT
+  entity {
+    table_entry {
+      table_id: 37375156
+      match {
+        field_id: 1
+        lpm {
+          value: "\n\000\003\003"
+          prefix_len: 32
+        }
+      }
+      action {
+        action {
+          action_id: 28792405
+          params {
+            param_id: 1
+            value: "\010\000\000\000\005\000"
+          }
+          params {
+            param_id: 2
+            value: "\000\002"
+          }
+        }
+      }
+    }
+  }
+}
+---
+
+[2020-12-10 21:32:27.809] /p4.v1.P4Runtime/Write
 ---
 device_id: 6
 election_id {
