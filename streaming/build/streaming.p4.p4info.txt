@@ -88,6 +88,11 @@ actions {
   }
   params {
     id: 2
+    name: "srcAddr"
+    bitwidth: 48
+  }
+  params {
+    id: 3
     name: "dst_ip"
     bitwidth: 32
   }

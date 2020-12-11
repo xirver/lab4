@@ -39,6 +39,7 @@
       },
       "action_name": "MyIngress.multicast_mod",
       "action_params": {
+        "srcAddr":"08:00:00:00:03:00",
         "dstAddr":"08:00:00:00:03:33",
         "dst_ip": "10.0.3.3"
       }

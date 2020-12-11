@@ -3,7 +3,7 @@
 #include <v1model.p4>
 
 const bit<16> TYPE_IPV4 = 0x800;
-
+const bit<8> IP_PROTO_UDP= 0x11;
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
@@ -91,14 +91,13 @@ parser MyParser(packet_in packet,
 
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
-/*         transition select(hdr.ipv4.protocol) {
+         transition select(hdr.ipv4.protocol) {
             8w0x11: parse_udp;
             default: accept;
-        } */
-        transition accept;
+        } 
     }
 
-/*     state parse_udp {
+     state parse_udp {
         packet.extract(hdr.udp);
         transition parse_rtp;
     }
@@ -107,7 +106,7 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.rtp);
         transition accept;
     }
- */
+ 
 }
 
 /*************************************************************************
@@ -140,9 +139,9 @@ control MyIngress(inout headers hdr,
         hdr.ipv4.ttl=hdr.ipv4.ttl-1; */
     }
 
-    action multicast_mod(macAddr_t dstAddr, ip4Addr_t dst_ip){
+    action multicast_mod(macAddr_t dstAddr, macAddr_t srcAddr, ip4Addr_t dst_ip){
         standard_metadata.mcast_grp = 1;
-        hdr.ethernet.srcAddr=hdr.ethernet.dstAddr;
+        hdr.ethernet.srcAddr=srcAddr;
         hdr.ethernet.dstAddr=dstAddr;
         hdr.ipv4.dstAddr=dst_ip;
         hdr.ipv4.ttl=hdr.ipv4.ttl-1;
@@ -218,6 +217,7 @@ control MyEgress(inout headers hdr,
 
 control MyComputeChecksum(inout headers hdr, inout metadata meta) {
     apply{
+
         update_checksum(
 	    hdr.ipv4.isValid(),
             { hdr.ipv4.version,
@@ -233,7 +233,10 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
               hdr.ipv4.dstAddr },
             hdr.ipv4.hdrChecksum,
             HashAlgorithm.csum16);
+
     }
+
+
 }
 
 /*************************************************************************
