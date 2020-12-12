@@ -79,38 +79,38 @@ struct headers {
 
 parser MyParser(packet_in packet, out headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
 
-    state start {
-      /* parse packet headers up to RTP if possible */
-      transition parse_ethernet;
+  state start {
+    /* parse packet headers up to RTP if possible */
+    transition parse_ethernet;
+  }
+  
+  state parse_ethernet {
+    /* TODO */
+    packet.extract(hdr.ethernet);
+    transition select(hdr.ethernet.etherType) {
+      TYPE_IPV4: parse_ipv4;
+      default: accept;
     }
-    
-    state parse_ethernet {
-      /* TODO */
-      packet.extract(hdr.ethernet);
-      transition select(hdr.ethernet.etherType) {
-        TYPE_IPV4: parse_ipv4;
-        default: accept;
-      }
-    }
+  }
 
-    state parse_ipv4 {
-      packet.extract(hdr.ipv4, (bit<32>) (8 * (4 * (bit<9>) (packet.lookahead<IPv4_up_to_ihl_only_h>().ihl) - 20)));
-      meta.l4Len = hdr.ipv4.totalLen - (bit<16>)(hdr.ipv4.ihl)*4;
-      transition select (hdr.ipv4.protocol) {
-        17: parse_udp;
-        default: accept;
-      }
+  state parse_ipv4 {
+    packet.extract(hdr.ipv4, (bit<32>) (8 * (4 * (bit<9>) (packet.lookahead<IPv4_up_to_ihl_only_h>().ihl) - 20)));
+    meta.l4Len = hdr.ipv4.totalLen - (bit<16>)(hdr.ipv4.ihl)*4;
+    transition select (hdr.ipv4.protocol) {
+      17: parse_udp;
+      default: accept;
     }
+  }
 
-    state parse_udp {
-      packet.extract(hdr.udp);
-      transition accept;
-    }
+  state parse_udp {
+    packet.extract(hdr.udp);
+    transition accept;
+  }
 
-    state parse_rtp {            
-      packet.extract(hdr.rtp);
-      transition accept;
-    }
+  state parse_rtp {            
+    packet.extract(hdr.rtp);
+    transition accept;
+  }
  
 }
 
@@ -235,9 +235,7 @@ control MyEgress(inout headers hdr, inout metadata meta, inout standard_metadata
   }
 
   apply {  
-    // Prune multicast packet to ingress port to preventing loop
-    if (standard_metadata.egress_port == standard_metadata.ingress_port)
-      drop();
+    
   }
 }
 

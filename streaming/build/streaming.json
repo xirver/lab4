@@ -549,7 +549,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "streaming.p4",
-        "line" : 290,
+        "line" : 288,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -566,7 +566,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "streaming.p4",
-        "line" : 250,
+        "line" : 248,
         "column" : 4,
         "source_fragment" : "update_checksum( ..."
       },
@@ -627,7 +627,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "streaming.p4",
-        "line" : 269,
+        "line" : 267,
         "column" : 4,
         "source_fragment" : "update_checksum_with_payload( ..."
       },
@@ -1098,28 +1098,6 @@
           }
         }
       ]
-    },
-    {
-      "name" : "MyEgress.drop",
-      "id" : 6,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "mark_to_drop",
-          "parameters" : [
-            {
-              "type" : "header",
-              "value" : "standard_metadata"
-            }
-          ],
-          "source_info" : {
-            "filename" : "streaming.p4",
-            "line" : 234,
-            "column" : 4,
-            "source_fragment" : "mark_to_drop(standard_metadata)"
-          }
-        }
-      ]
     }
   ],
   "pipelines" : [
@@ -1253,67 +1231,10 @@
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
-      "init_table" : "node_7",
-      "tables" : [
-        {
-          "name" : "tbl_drop",
-          "id" : 2,
-          "source_info" : {
-            "filename" : "streaming.p4",
-            "line" : 240,
-            "column" : 6,
-            "source_fragment" : "drop()"
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [6],
-          "actions" : ["MyEgress.drop"],
-          "base_default_next" : null,
-          "next_tables" : {
-            "MyEgress.drop" : null
-          },
-          "default_entry" : {
-            "action_id" : 6,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        }
-      ],
+      "init_table" : null,
+      "tables" : [],
       "action_profiles" : [],
-      "conditionals" : [
-        {
-          "name" : "node_7",
-          "id" : 1,
-          "source_info" : {
-            "filename" : "streaming.p4",
-            "line" : 239,
-            "column" : 8,
-            "source_fragment" : "standard_metadata.egress_port == standard_metadata.ingress_port"
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "==",
-              "left" : {
-                "type" : "field",
-                "value" : ["standard_metadata", "egress_port"]
-              },
-              "right" : {
-                "type" : "field",
-                "value" : ["standard_metadata", "ingress_port"]
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "tbl_drop"
-        }
-      ]
+      "conditionals" : []
     }
   ],
   "checksums" : [
@@ -1322,7 +1243,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "streaming.p4",
-        "line" : 250,
+        "line" : 248,
         "column" : 4,
         "source_fragment" : "update_checksum( ..."
       },
@@ -1348,7 +1269,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "streaming.p4",
-        "line" : 269,
+        "line" : 267,
         "column" : 4,
         "source_fragment" : "update_checksum_with_payload( ..."
       },
