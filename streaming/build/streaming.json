@@ -3,11 +3,23 @@
     {
       "name" : "scalars_0",
       "id" : 0,
-      "fields" : []
+      "fields" : [
+        ["tmp_0", 32, false],
+        ["tmp_4", 8, false],
+        ["userMetadata.l4Len", 16, false]
+      ]
+    },
+    {
+      "name" : "IPv4_up_to_ihl_only_h",
+      "id" : 1,
+      "fields" : [
+        ["version", 4, false],
+        ["ihl", 4, false]
+      ]
     },
     {
       "name" : "standard_metadata",
-      "id" : 1,
+      "id" : 2,
       "fields" : [
         ["ingress_port", 9, false],
         ["egress_spec", 9, false],
@@ -30,7 +42,7 @@
     },
     {
       "name" : "ethernet_t",
-      "id" : 2,
+      "id" : 3,
       "fields" : [
         ["dstAddr", 48, false],
         ["srcAddr", 48, false],
@@ -39,7 +51,7 @@
     },
     {
       "name" : "ipv4_t",
-      "id" : 3,
+      "id" : 4,
       "fields" : [
         ["version", 4, false],
         ["ihl", 4, false],
@@ -52,12 +64,14 @@
         ["protocol", 8, false],
         ["hdrChecksum", 16, false],
         ["srcAddr", 32, false],
-        ["dstAddr", 32, false]
-      ]
+        ["dstAddr", 32, false],
+        ["options", "*"]
+      ],
+      "max_length" : 60
     },
     {
       "name" : "udp_t",
-      "id" : 4,
+      "id" : 5,
       "fields" : [
         ["srcPort", 16, false],
         ["dstPort", 16, false],
@@ -67,7 +81,7 @@
     },
     {
       "name" : "rtp_t",
-      "id" : 5,
+      "id" : 6,
       "fields" : [
         ["version", 2, false],
         ["padding", 1, false],
@@ -83,43 +97,50 @@
   ],
   "headers" : [
     {
-      "name" : "scalars",
+      "name" : "tmp",
       "id" : 0,
+      "header_type" : "IPv4_up_to_ihl_only_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "scalars",
+      "id" : 1,
       "header_type" : "scalars_0",
       "metadata" : true,
       "pi_omit" : true
     },
     {
       "name" : "standard_metadata",
-      "id" : 1,
+      "id" : 2,
       "header_type" : "standard_metadata",
       "metadata" : true,
       "pi_omit" : true
     },
     {
       "name" : "ethernet",
-      "id" : 2,
+      "id" : 3,
       "header_type" : "ethernet_t",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "ipv4",
-      "id" : 3,
+      "id" : 4,
       "header_type" : "ipv4_t",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "udp",
-      "id" : 4,
+      "id" : 5,
       "header_type" : "udp_t",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "rtp",
-      "id" : 5,
+      "id" : 6,
       "header_type" : "rtp_t",
       "metadata" : false,
       "pi_omit" : true
@@ -188,11 +209,289 @@
             {
               "parameters" : [
                 {
-                  "type" : "regular",
-                  "value" : "ipv4"
+                  "type" : "field",
+                  "value" : ["scalars", "tmp_4"]
+                },
+                {
+                  "type" : "lookahead",
+                  "value" : [0, 8]
                 }
               ],
-              "op" : "extract"
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "parameters" : [
+                    {
+                      "type" : "header",
+                      "value" : "tmp"
+                    }
+                  ],
+                  "op" : "add_header"
+                }
+              ],
+              "op" : "primitive"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["tmp", "version"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "&",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : ">>",
+                              "left" : {
+                                "type" : "field",
+                                "value" : ["scalars", "tmp_4"]
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0x4"
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0xff"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x0f"
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["tmp", "ihl"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["scalars", "tmp_4"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x0f"
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "tmp_0"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "&",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "<<",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "&",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "+",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "&",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "<<",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "&",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "field",
+                                                        "value" : ["scalars", "tmp_4"]
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0x0f"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "hexstr",
+                                                    "value" : "0x01ff"
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0x2"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0x01ff"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0x01ec"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0x01ff"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0x3"
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x01ff"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffffffff"
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "ipv4"
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "field",
+                    "value" : ["scalars", "tmp_0"]
+                  }
+                }
+              ],
+              "op" : "extract_VL"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "userMetadata.l4Len"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "-",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["ipv4", "totalLen"]
+                          },
+                          "right" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "<<",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "field",
+                                        "value" : ["ipv4", "ihl"]
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0x2"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffff"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffff"
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
             }
           ],
           "transitions" : [
@@ -228,15 +527,6 @@
                 }
               ],
               "op" : "extract"
-            },
-            {
-              "parameters" : [
-                {
-                  "type" : "regular",
-                  "value" : "rtp"
-                }
-              ],
-              "op" : "extract"
             }
           ],
           "transitions" : [
@@ -259,7 +549,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "streaming.p4",
-        "line" : 246,
+        "line" : 290,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -276,8 +566,8 @@
       "id" : 0,
       "source_info" : {
         "filename" : "streaming.p4",
-        "line" : 221,
-        "column" : 8,
+        "line" : 250,
+        "column" : 4,
         "source_fragment" : "update_checksum( ..."
       },
       "algo" : "csum16",
@@ -325,6 +615,171 @@
         {
           "type" : "field",
           "value" : ["ipv4", "dstAddr"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "options"]
+        }
+      ]
+    },
+    {
+      "name" : "calc_0",
+      "id" : 1,
+      "source_info" : {
+        "filename" : "streaming.p4",
+        "line" : 269,
+        "column" : 4,
+        "source_fragment" : "update_checksum_with_payload( ..."
+      },
+      "algo" : "csum16",
+      "input" : [
+        {
+          "type" : "field",
+          "value" : ["ipv4", "srcAddr"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "dstAddr"]
+        },
+        {
+          "type" : "hexstr",
+          "value" : "0x00",
+          "bitwidth" : 8
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "protocol"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "userMetadata.l4Len"]
+        },
+        {
+          "type" : "field",
+          "value" : ["udp", "srcPort"]
+        },
+        {
+          "type" : "field",
+          "value" : ["udp", "dstPort"]
+        },
+        {
+          "type" : "field",
+          "value" : ["udp", "length_"]
+        },
+        {
+          "type" : "payload",
+          "value" : null
+        }
+      ]
+    },
+    {
+      "name" : "calc_1",
+      "id" : 2,
+      "source_info" : {
+        "filename" : "streaming.p4",
+        "line" : 123,
+        "column" : 4,
+        "source_fragment" : "verify_checksum( ..."
+      },
+      "algo" : "csum16",
+      "input" : [
+        {
+          "type" : "field",
+          "value" : ["ipv4", "version"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "ihl"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "diffserv"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "totalLen"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "identification"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "flags"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "fragOffset"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "ttl"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "protocol"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "srcAddr"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "dstAddr"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "options"]
+        }
+      ]
+    },
+    {
+      "name" : "calc_2",
+      "id" : 3,
+      "source_info" : {
+        "filename" : "streaming.p4",
+        "line" : 142,
+        "column" : 4,
+        "source_fragment" : "verify_checksum_with_payload( ..."
+      },
+      "algo" : "csum16",
+      "input" : [
+        {
+          "type" : "field",
+          "value" : ["ipv4", "srcAddr"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "dstAddr"]
+        },
+        {
+          "type" : "hexstr",
+          "value" : "0x00",
+          "bitwidth" : 8
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "protocol"]
+        },
+        {
+          "type" : "field",
+          "value" : ["scalars", "userMetadata.l4Len"]
+        },
+        {
+          "type" : "field",
+          "value" : ["udp", "srcPort"]
+        },
+        {
+          "type" : "field",
+          "value" : ["udp", "dstPort"]
+        },
+        {
+          "type" : "field",
+          "value" : ["udp", "length_"]
+        },
+        {
+          "type" : "payload",
+          "value" : null
         }
       ]
     }
@@ -358,8 +813,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 131,
-            "column" : 8,
+            "line" : 166,
+            "column" : 4,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
         }
@@ -384,8 +839,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 136,
-            "column" : 8,
+            "line" : 171,
+            "column" : 4,
             "source_fragment" : "standard_metadata.mcast_grp = 1"
           }
         }
@@ -423,8 +878,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 143,
-            "column" : 8,
+            "line" : 175,
+            "column" : 4,
             "source_fragment" : "standard_metadata.mcast_grp = 1"
           }
         },
@@ -442,8 +897,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 144,
-            "column" : 8,
+            "line" : 176,
+            "column" : 4,
             "source_fragment" : "hdr.ethernet.srcAddr=srcAddr"
           }
         },
@@ -461,8 +916,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 145,
-            "column" : 8,
+            "line" : 177,
+            "column" : 4,
             "source_fragment" : "hdr.ethernet.dstAddr=dstAddr"
           }
         },
@@ -480,8 +935,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 146,
-            "column" : 8,
+            "line" : 178,
+            "column" : 4,
             "source_fragment" : "hdr.ipv4.dstAddr=dst_ip"
           }
         },
@@ -522,8 +977,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 147,
-            "column" : 8,
+            "line" : 179,
+            "column" : 4,
             "source_fragment" : "hdr.ipv4.ttl=hdr.ipv4.ttl-1"
           }
         }
@@ -557,8 +1012,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 152,
-            "column" : 8,
+            "line" : 184,
+            "column" : 4,
             "source_fragment" : "standard_metadata.egress_spec = port"
           }
         },
@@ -576,8 +1031,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 153,
-            "column" : 8,
+            "line" : 185,
+            "column" : 4,
             "source_fragment" : "hdr.ethernet.srcAddr=hdr.ethernet.dstAddr"
           }
         },
@@ -595,8 +1050,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 154,
-            "column" : 8,
+            "line" : 186,
+            "column" : 4,
             "source_fragment" : "hdr.ethernet.dstAddr=dstAddr"
           }
         },
@@ -637,8 +1092,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 155,
-            "column" : 8,
+            "line" : 187,
+            "column" : 4,
             "source_fragment" : "hdr.ipv4.ttl=hdr.ipv4.ttl-1"
           }
         }
@@ -659,8 +1114,8 @@
           ],
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 203,
-            "column" : 12,
+            "line" : 234,
+            "column" : 4,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
         }
@@ -673,7 +1128,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "streaming.p4",
-        "line" : 126,
+        "line" : 163,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
@@ -684,8 +1139,8 @@
           "id" : 0,
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 173,
-            "column" : 10,
+            "line" : 205,
+            "column" : 8,
             "source_fragment" : "ipv4_lpm"
           },
           "key" : [
@@ -722,8 +1177,8 @@
           "id" : 1,
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 159,
-            "column" : 10,
+            "line" : 191,
+            "column" : 8,
             "source_fragment" : "_multi"
           },
           "key" : [
@@ -769,8 +1224,8 @@
           "id" : 0,
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 188,
-            "column" : 12,
+            "line" : 220,
+            "column" : 8,
             "source_fragment" : "hdr.ipv4.isValid()"
           },
           "expression" : {
@@ -794,7 +1249,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "streaming.p4",
-        "line" : 199,
+        "line" : 231,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -805,8 +1260,8 @@
           "id" : 2,
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 210,
-            "column" : 12,
+            "line" : 240,
+            "column" : 6,
             "source_fragment" : "drop()"
           },
           "key" : [],
@@ -837,8 +1292,8 @@
           "id" : 1,
           "source_info" : {
             "filename" : "streaming.p4",
-            "line" : 209,
-            "column" : 12,
+            "line" : 239,
+            "column" : 8,
             "source_fragment" : "standard_metadata.egress_port == standard_metadata.ingress_port"
           },
           "expression" : {
@@ -867,8 +1322,8 @@
       "id" : 0,
       "source_info" : {
         "filename" : "streaming.p4",
-        "line" : 221,
-        "column" : 8,
+        "line" : 250,
+        "column" : 4,
         "source_fragment" : "update_checksum( ..."
       },
       "target" : ["ipv4", "hdrChecksum"],
@@ -884,6 +1339,84 @@
           "right" : {
             "type" : "field",
             "value" : ["ipv4", "$valid$"]
+          }
+        }
+      }
+    },
+    {
+      "name" : "cksum_0",
+      "id" : 1,
+      "source_info" : {
+        "filename" : "streaming.p4",
+        "line" : 269,
+        "column" : 4,
+        "source_fragment" : "update_checksum_with_payload( ..."
+      },
+      "target" : ["udp", "checksum"],
+      "type" : "generic",
+      "calculation" : "calc_0",
+      "verify" : false,
+      "update" : true,
+      "if_cond" : {
+        "type" : "expression",
+        "value" : {
+          "op" : "d2b",
+          "left" : null,
+          "right" : {
+            "type" : "field",
+            "value" : ["udp", "$valid$"]
+          }
+        }
+      }
+    },
+    {
+      "name" : "cksum_1",
+      "id" : 2,
+      "source_info" : {
+        "filename" : "streaming.p4",
+        "line" : 123,
+        "column" : 4,
+        "source_fragment" : "verify_checksum( ..."
+      },
+      "target" : ["ipv4", "hdrChecksum"],
+      "type" : "generic",
+      "calculation" : "calc_1",
+      "verify" : true,
+      "update" : false,
+      "if_cond" : {
+        "type" : "expression",
+        "value" : {
+          "op" : "d2b",
+          "left" : null,
+          "right" : {
+            "type" : "field",
+            "value" : ["ipv4", "$valid$"]
+          }
+        }
+      }
+    },
+    {
+      "name" : "cksum_2",
+      "id" : 3,
+      "source_info" : {
+        "filename" : "streaming.p4",
+        "line" : 142,
+        "column" : 4,
+        "source_fragment" : "verify_checksum_with_payload( ..."
+      },
+      "target" : ["udp", "checksum"],
+      "type" : "generic",
+      "calculation" : "calc_2",
+      "verify" : true,
+      "update" : false,
+      "if_cond" : {
+        "type" : "expression",
+        "value" : {
+          "op" : "d2b",
+          "left" : null,
+          "right" : {
+            "type" : "field",
+            "value" : ["udp", "$valid$"]
           }
         }
       }
